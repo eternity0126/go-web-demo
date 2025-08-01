@@ -1,0 +1,23 @@
+env: dev
+
+server:
+  port: 8090
+
+log:
+  max_size: 1 # 日志文件最大尺寸(MB), 超限后自动分割
+  max_backups: 10 # 保留旧文件的最大个数
+  max_age: 3 # 保留文件的最大天数
+
+db:
+  dsn: "root:@tcp(127.0.0.1:3306)/gogofly?charset=utf8mb4&parseTime=True&loc=Local"
+  max_idle_conn: 10 # 最多空闲连接数
+  max_open_conn: 10 # 最多打开连接数
+
+redis:
+  addr: 127.0.0.1:6379
+  password:
+  db: 3
+
+jwt:
+  token_expire: 30 # token有效时长(分钟)
+  signing_key: gogofly  # 签名使用的key
