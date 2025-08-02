@@ -8,14 +8,14 @@ import (
 )
 
 type JwtCustomClaims struct {
-	ID   int
+	ID   uint
 	Name string
 	jwt.RegisteredClaims
 }
 
 var stSigningKey = []byte(viper.GetString("jwt.signing_key"))
 
-func GenerateToken(id int, name string) (string, error) {
+func GenerateToken(id uint, name string) (string, error) {
 	iJwtCustomClaims := JwtCustomClaims{
 		ID:   id,
 		Name: name,
@@ -43,10 +43,10 @@ func ParseToken(tokenStr string) (JwtCustomClaims, error) {
 	return iJwtCustomClaims, err
 }
 
-func IsTokenValid(tokenStr string) bool {
-	_, err := ParseToken(tokenStr)
-	if err != nil {
-		return false
-	}
-	return true
-}
+//func IsTokenValid(tokenStr string) bool {
+//	_, err := ParseToken(tokenStr)
+//	if err != nil {
+//		return false
+//	}
+//	return true
+//}

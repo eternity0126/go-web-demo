@@ -1,20 +1,27 @@
 package api
 
 import (
-	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	"gogofly/service"
 	"gogofly/service/dto"
 	"gogofly/utils"
-	"reflect"
+)
+
+const (
+	ERR_CODE_ADD_USER = 10011 + iota
+	ERR_CODE_GET_USER_BY_ID
 )
 
 type UserApi struct {
+	BaseApi
+	Service *service.UserService
 }
 
 func NewUserApi() UserApi {
-	return UserApi{}
+	return UserApi{
+		BaseApi: NewBaseApi(),
+		Service: service.NewUserService(),
+	}
 }
 
 // @Tags 用户管理
@@ -28,38 +35,68 @@ func NewUserApi() UserApi {
 func (u UserApi) Login(c *gin.Context) {
 	var iUserLoginDTO dto.UserLoginDTO
 
-	errs := c.ShouldBind(&iUserLoginDTO)
-	if errs != nil {
-		ClientFail(c, ResponseJson{
-			Msg: parseValidateErrors(errs.(validator.ValidationErrors), &iUserLoginDTO).Error(),
+	if err := u.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserLoginDTO}).GetError(); err != nil {
+		return
+	}
+
+	iUser, err := u.Service.Login(iUserLoginDTO)
+	if err != nil {
+		u.ClientFail(ResponseJson{
+			Msg: err.Error(),
 		})
 		return
 	}
 
-	Success(c, ResponseJson{
-		Data: iUserLoginDTO,
+	// 成功查找到对应用户
+	token, _ := utils.GenerateToken(iUser.ID, iUser.Name)
+
+	u.Success(ResponseJson{
+		Data: gin.H{
+			"token": token,
+			"iUser": iUser,
+		},
 	})
 }
 
-func parseValidateErrors(errs validator.ValidationErrors, target any) error {
-	var errResult error
-
-	// 通过反射获取指针指向的指定元素的类型对象
-	fields := reflect.TypeOf(target).Elem()
-	for _, fieldErr := range errs {
-		field, _ := fields.FieldByName(fieldErr.Field())
-		errMessageTag := fmt.Sprintf("%s_err", fieldErr.Tag())
-		errMessage := field.Tag.Get(errMessageTag)
-		if errMessage == "" {
-			errMessage = field.Tag.Get("message")
-		}
-
-		if errMessage == "" {
-			errMessage = fmt.Sprintf("%s: %s Error", fieldErr.Field(), fieldErr.Tag())
-		}
-
-		errResult = utils.AppendError(errResult, errors.New(errMessage))
+func (u UserApi) AddUser(c *gin.Context) {
+	var iUserAddDTO dto.UserAddDTO
+	if err := u.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserAddDTO}).GetError(); err != nil {
+		return
 	}
 
-	return errResult
+	err := u.Service.AddUser(&iUserAddDTO)
+	if err != nil {
+		u.ServerFail(ResponseJson{
+			Code: ERR_CODE_ADD_USER,
+			Msg:  err.Error(),
+		})
+
+		return
+	}
+
+	u.Success(ResponseJson{
+		Data: iUserAddDTO,
+	})
+
+}
+
+func (u UserApi) GetUserById(c *gin.Context) {
+	var iCommonIdDTO dto.CommonIdDTO
+	if err := u.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iCommonIdDTO, BindParamsFromUri: true}).GetError(); err != nil {
+		return
+	}
+
+	iUser, err := u.Service.GetUserById(&iCommonIdDTO)
+	if err != nil {
+		u.ServerFail(ResponseJson{
+			Code: ERR_CODE_GET_USER_BY_ID,
+			Msg:  err.Error(),
+		})
+
+		return
+	}
+
+	u.Success(ResponseJson{
+		Data: iUser,
+	})
 }

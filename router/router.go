@@ -11,6 +11,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	_ "gogofly/docs"
 	"gogofly/global"
+	"gogofly/middleware"
 	"net/http"
 	"os/signal"
 	"strings"
@@ -41,7 +42,7 @@ func InitRouter() {
 	defer cancelCtx()
 
 	r := gin.Default()
-
+	r.Use(middleware.Cors())
 	// 设置两个路由组
 	rgPublic := r.Group("/api/v1/public")
 	rgAuth := r.Group("/api/v1")
@@ -95,6 +96,7 @@ func InitRouter() {
 
 func initBasePlatformRoutes() {
 	InitUserRoutes()
+	InitHostRoutes()
 }
 
 // 注册自定义验证器

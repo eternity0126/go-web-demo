@@ -3,7 +3,6 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"gogofly/api"
-	"net/http"
 )
 
 func InitUserRoutes() {
@@ -16,20 +15,8 @@ func InitUserRoutes() {
 
 		rgAuthUser := rgAuth.Group("user")
 		{
-			rgAuthUser.GET("", func(c *gin.Context) {
-				c.AbortWithStatusJSON(http.StatusOK, gin.H{
-					"data": []map[string]any{
-						{"id": 1, "name": "zs"},
-					},
-				})
-			})
-
-			rgAuthUser.GET("/:id", func(c *gin.Context) {
-				c.AbortWithStatusJSON(http.StatusOK, gin.H{
-					"id":   1,
-					"name": "zs",
-				})
-			})
+			rgAuthUser.POST("", userApi.AddUser)
+			rgAuthUser.GET("/:id", userApi.GetUserById)
 		}
 	})
 }

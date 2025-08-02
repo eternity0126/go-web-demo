@@ -21,3 +21,10 @@ redis:
 jwt:
   token_expire: 30 # token有效时长(分钟)
   signing_key: gogofly  # 签名使用的key
+
+ansible:
+  user:
+    name: root
+    password:
+  shutdown:
+    args: "poweroff"
